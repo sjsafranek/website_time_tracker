@@ -1,5 +1,5 @@
 {
-	"name": "Time Tracker Extension",
+	"name": "Website Time Tracker Extension",
 	"version": "0.1",
 	"description": "Tracks time spent at websites.",
 	"background": {
@@ -13,8 +13,14 @@
 		"https://*/"
 	],
     "browser_action": {
-        "default_icon": "camera.png",
-        "default_title": "Time Tracker Details"
+        "default_icon": "clock.png",
+        "default_title": "Website Time Tracker"
     },
+	"content_scripts": [
+		{
+			"matches": ["http://*/*", "https://*/*"],
+			"js": ["infect.js"]
+		}
+	],
 	"manifest_version": 2
 }
