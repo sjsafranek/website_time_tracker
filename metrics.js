@@ -94,7 +94,15 @@ function buildTree(data) {
             var v = parseInt(data[i][j]);
             var d = tree[i];
             var p = j.split('/');
+            if (2 == p.length && "" == p[1]) {
+                p[1] = "index";
+            }
             for (var k=1; k<p.length; k++) {
+
+                if ("index" == p[k]) {
+                    debugger;
+                }
+
                 if (!d[p[k]]) d[p[k]] = {
                     "_value": -1
                 };

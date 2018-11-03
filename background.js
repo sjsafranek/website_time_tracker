@@ -1,12 +1,25 @@
 var timer;
-var current;
+var currentTab;
+var tabs = {}
 var pages = {};
+var time_limit = 10;
 
 
-chrome.tabs.onActivated.addListener(function(activeInfo) {
+function onTabEvent(tab, eventType) {
+    console.log("[DEBUG]:", tab, eventType);
+    tabs[tab.tabId] = {
+        "timestamp": new Date(),
+        "eventType": eventType
+    }
+}
+
+
+function onTabActivated(activeInfo) {
+    // console.log("[DEBUG]: Tab activated.", activeInfo);
+
     var now = new Date();
     if (timer) {
-        var url = new URL(current);
+        var url = new URL(currentTab.url);
         if (chrome.runtime.id != url.hostname) {
             if (!pages[url.hostname]) {
                 pages[url.hostname] = {};
@@ -14,19 +27,42 @@ chrome.tabs.onActivated.addListener(function(activeInfo) {
             if (!pages[url.hostname][url.pathname]) {
                 pages[url.hostname][url.pathname] = 0;
             }
-            pages[url.hostname][url.pathname] += now - timer;
+
+            delta = now - timer;
+            if (tabs[currentTab.id]) {
+                var diff = parseInt((now - tabs[currentTab.id].timestamp)/1000);
+                if (time_limit < diff) {
+                    console.log("[DEBUG]: exceeds " + time_limit + " second limit.");
+                    delta += time_limit;
+                }
+            }
+
+            pages[url.hostname][url.pathname] += delta/1000;
         }
     }
 
     timer = new Date();
 
     chrome.tabs.getSelected(null, function(tab) {
-        var tabId = tab.id;
-        var tabUrl = tab.url;
-        current = tab.url;
+        currentTab = {
+            tabId: tab.id,
+            windowId: tab.windowId,
+            url: tab.url
+        };
+        onTabEvent(currentTab, "active");
     });
+}
 
+
+// track page refreshes and path changes
+chrome.tabs.onUpdated.addListener(function(tabId, changedProps) {
+    onTabActivated({
+        tabId: tabId,
+    });
 });
+
+
+chrome.tabs.onActivated.addListener(onTabActivated);
 
 
 chrome.browserAction.onClicked.addListener(function() {
@@ -61,29 +97,41 @@ chrome.browserAction.onClicked.addListener(function() {
     });
 
     chrome.tabs.create({url: viewTabUrl}, function(tab) {
-          targetId = tab.id;
+        targetId = tab.id;
     });
 
 });
+
+
+
 
 
 // https://developer.chrome.com/extensions/messaging
 // https://www.youtube.com/watch?v=wjiku6X-hd8
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // console.log(request, sender);
-    var url = new URL(current);
+    var url = new URL(sender.url);
     if (chrome.runtime.id != url.hostname) {
-        if (!pages[url.hostname]) {
-            pages[url.hostname] = {};
+
+        var tab = {
+            tabId: sender.tab.id,
+            windowId: sender.tab.windowId,
+            url: sender.url
+        };
+
+        var diff = parseInt((new Date() - tabs[tab.tabId].timestamp)/1000);
+
+        if (time_limit < diff) {
+            console.log("[DEBUG]: exceeds " + time_limit + " second limit.");
+            if (currentTab.tabId == tab.tabId) {
+                timer = null;
+                onTabActivated(tab);
+            }
+        } else {
+            onTabEvent(tab, request);
         }
-        if (!pages[url.hostname][url.pathname]) {
-            pages[url.hostname][url.pathname] = 0;
-        }
-        pages[url.hostname][url.pathname] += now - timer;
+        sendResponse({"status":"ok", "message": "Thanks for the data!"});
     }
-    // pages[sender.url].last_event_timestamp = parseInt(new Date().getTime() / 1000);
-    // pages[sender.url].last_event_type = request;
-    sendResponse({"status":"ok", "message": "Thanks for the data!"});
 });
 
 
