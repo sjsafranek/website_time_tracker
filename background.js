@@ -2,7 +2,7 @@ var timer;
 var currentTab;
 var tabs = {}
 var pages = {};
-var time_limit = 10;
+var time_limit = 120;
 
 
 function onTabEvent(tab, eventType) {

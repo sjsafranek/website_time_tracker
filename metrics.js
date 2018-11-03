@@ -25,20 +25,20 @@ var arc = d3.arc()
 var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height)
-  .append("g")
-    .attr("transform", "translate(" + width / 2 + "," + (height / 2) + ")");
+    .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + (height / 2) + ")");
 
 function click(d) {
-  svg.transition()
-    .duration(750)
-    .tween("scale", function() {
-        var xd = d3.interpolate(x.domain(), [d.x0, d.x1]),
-            yd = d3.interpolate(y.domain(), [d.y0, 1]),
-            yr = d3.interpolate(y.range(), [d.y0 ? 20 : 0, radius]);
-        return function(t) { x.domain(xd(t)); y.domain(yd(t)).range(yr(t)); };
-    })
-    .selectAll("path")
-        .attrTween("d", function(d) { return function() { return arc(d); }; });
+    svg.transition()
+        .duration(750)
+        .tween("scale", function() {
+            var xd = d3.interpolate(x.domain(), [d.x0, d.x1]),
+                yd = d3.interpolate(y.domain(), [d.y0, 1]),
+                yr = d3.interpolate(y.range(), [d.y0 ? 20 : 0, radius]);
+            return function(t) { x.domain(xd(t)); y.domain(yd(t)).range(yr(t)); };
+        })
+        .selectAll("path")
+            .attrTween("d", function(d) { return function() { return arc(d); }; });
 }
 
 d3.select(self.frameElement).style("height", height + "px");
@@ -65,7 +65,6 @@ function draw(root) {
 
 function buildBranch(base, data) {
     for (var i in data) {
-
         if (-1 != ["_value", "newtab", ""].indexOf(i)) {
             continue;
         }
@@ -76,13 +75,16 @@ function buildBranch(base, data) {
                             "size": data[i]._value
                         }, data[i]);
 
-        if (-1 == branch.size) {
+        if (-1 == branch.size || !branch.size) {
             delete(branch.size);
+        }
+
+        if (0 == branch.children.length) {
+            delete(branch.children);
         }
 
         base.children.push(branch);
     }
-
     return base;
 }
 
@@ -98,11 +100,6 @@ function buildTree(data) {
                 p[1] = "index";
             }
             for (var k=1; k<p.length; k++) {
-
-                if ("index" == p[k]) {
-                    debugger;
-                }
-
                 if (!d[p[k]]) d[p[k]] = {
                     "_value": -1
                 };
