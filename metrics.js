@@ -7,6 +7,8 @@ var width = 960,
 var formatNumber = d3.format(",d");
 
 var x = d3.scaleLinear()
+// var x = d3.scaleLog()
+// var x = d3.d3.scaleSqrt()
     .range([0, 2 * Math.PI]);
 
 var y = d3.scaleSqrt()

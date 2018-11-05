@@ -2,7 +2,11 @@ var timer;
 var currentTab;
 var tabs = {}
 var pages = {};
+var sessions = [];
 var time_limit = 120;
+
+
+// function
 
 
 function onTabEvent(tab, eventType) {
@@ -14,9 +18,8 @@ function onTabEvent(tab, eventType) {
 }
 
 
-function onTabActivated(activeInfo) {
-    // console.log("[DEBUG]: Tab activated.", activeInfo);
-
+function onTabActivated(tabInfo) {
+    console.log(tabInfo);
     var now = new Date();
     if (timer) {
         var url = new URL(currentTab.url);
@@ -33,7 +36,7 @@ function onTabActivated(activeInfo) {
                 var diff = parseInt((now - tabs[currentTab.id].timestamp)/1000);
                 if (time_limit < diff) {
                     console.log("[DEBUG]: exceeds " + time_limit + " second limit.");
-                    delta += time_limit;
+                    delta = time_limit*1000;
                 }
             }
 
@@ -103,9 +106,6 @@ chrome.browserAction.onClicked.addListener(function() {
 });
 
 
-
-
-
 // https://developer.chrome.com/extensions/messaging
 // https://www.youtube.com/watch?v=wjiku6X-hd8
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -124,12 +124,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         if (time_limit < diff) {
             console.log("[DEBUG]: exceeds " + time_limit + " second limit.");
             if (currentTab.tabId == tab.tabId) {
-                timer = null;
+                timer = new Date(new Date()-time_limit);
                 onTabActivated(tab);
             }
         } else {
             onTabEvent(tab, request);
         }
+
         sendResponse({"status":"ok", "message": "Thanks for the data!"});
     }
 });
