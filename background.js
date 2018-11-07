@@ -6,9 +6,6 @@ var sessions = [];
 var time_limit = 120;
 
 
-// function
-
-
 function onTabEvent(tab, eventType) {
     console.log("[DEBUG]:", tab, eventType);
     tabs[tab.tabId] = {
@@ -32,7 +29,7 @@ function onTabActivated(tabInfo) {
             }
 
             delta = now - timer;
-            if (tabs[currentTab.id]) {
+            if (tabs[currentTab.id] && tabs[currentTab.id].timestamp) {
                 var diff = parseInt((now - tabs[currentTab.id].timestamp)/1000);
                 if (time_limit < diff) {
                     console.log("[DEBUG]: exceeds " + time_limit + " second limit.");
